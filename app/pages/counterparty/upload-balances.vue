@@ -4,10 +4,10 @@
 		<BaseIsland title="Загрузка балансов" prependIcon="mdi-upload">
 			<form class="upload-balances-form" @submit.prevent="sendForm">
 				<BaseFilePicker v-model="form.file" label="Поместите excel-файл сюда" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :error="errors.file"/>
-				<BaseTextBox v-model="form.worksheet" label="Название листа" placeholder="Лист1" :error="errors.worksheet" @submit="sendForm"/>
+				<BaseTextBox v-model="form.worksheet" label="Название листа (необязательно)" placeholder="Лист1" :error="errors.worksheet"/>
 				<p v-if="submitError" class="submit-message error">{{ submitError }}</p>
 				<p v-if="submitSuccess" class="submit-message success">{{ submitSuccess }}</p>
-				<BaseButton :disabled="isSubmitting" prependIcon="mdi-send">
+				<BaseButton @click="sendForm" :disabled="isSubmitting" prependIcon="mdi-send">
 					{{ isSubmitting ? 'Загрузка...' : 'Загрузить' }}
 				</BaseButton>
 			</form>
@@ -50,7 +50,7 @@ function validateForm() {
 	const nextErrors: Partial<Record<keyof Form, string>> = {};
 
 	if( !form.value.file ) nextErrors.file = 'Выберите файл';
-	if( !form.value.worksheet.trim() ) nextErrors.worksheet = 'Укажите название листа';
+	// if( !form.value.worksheet.trim() ) nextErrors.worksheet = 'Укажите название листа';
 
 	errors.value = nextErrors;
 	return Object.keys(nextErrors).length === 0;
@@ -66,7 +66,7 @@ async function sendForm() {
 
 	const body = new FormData();
 	body.append('file', form.value.file as File);
-	body.append('worksheet', form.value.worksheet.trim());
+	if( form.value?.worksheet.trim() ) body.append('worksheet', form.value.worksheet.trim());
 
 	try {
 		isSubmitting.value = true;
