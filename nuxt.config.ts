@@ -34,5 +34,12 @@ export default defineNuxtConfig({
 		baseURL: process.env.BASE_URL ?? '/',
 	},
 
+	runtimeConfig: {
+		public: {
+			apiURL: process.env.NUXT_PUBLIC_API_BASE ?? 'https://api.gazprom.kg/api',
+			apiToken: process.env.NUXT_PUBLIC_API_TOKEN
+		},
+	},
+
 	modules: ['@pinia/nuxt'],
 })
