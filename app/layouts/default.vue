@@ -10,6 +10,6 @@
 
 <style lang="scss">
 .default-layout {
-
+	background-color: #f6f7fb;
 }
 </style>
