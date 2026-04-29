@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-
+navigateTo('/dashboard');
 </script>
 
 <style lang="scss">
