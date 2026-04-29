@@ -1,6 +1,6 @@
 <template>
 	<div class="file-picker-box" :class="{ invalid: error }">
-		<header class="header" style="display:flex; align-items:start; padding-right:1em;">
+		<header class="fp-header" style="display:flex; align-items:start; padding-right:1em;">
 			<div v-if="label" class="caption-container" style="flex:auto 1 1;">
 				<span class="caption">{{ label }}</span>
 			</div>
@@ -42,6 +42,7 @@
 			<input
 				type="file"
 				:multiple="multiple"
+				:accept="accept"
 				ref="fileInput"
 				style="display:none;"
 				@change="onSelectFile"
@@ -51,7 +52,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, type PropType } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import BaseButton from './BaseButton.vue';
 
@@ -62,6 +63,7 @@ export default defineComponent({
 	props: {
 		label: String,
 		modelValue: { type: [Object, Array] as PropType<File | File[] | null>, default: null },
+		accept: String,
 		error: String,
 		multiple: Boolean,
 	},
@@ -133,7 +135,7 @@ export default defineComponent({
 
 <style lang="scss">
 .file-picker-box {
-	.header {
+	.fp-header {
 		.caption-container {
 			.caption {
 				font-size:14px;
