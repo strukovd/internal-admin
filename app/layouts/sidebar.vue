@@ -2,11 +2,11 @@
 	<section class="sidebar-layout">
 		<header class="sidebar-header" style="display:flex; align-items:center; gap:1em; padding:.5em 2em;">
 			<section class="logo" style="display: flex; align-items:center; gap:.6em; margin-right:2em;">
-				<img height="20px" src="/favicon.svg" alt="Логотип" />
+				<img height="32px" src="/favicon.svg" alt="Логотип" />
 				<h2>Internal Admin</h2>
 			</section>
 			<section class="search">
-				<BaseTextBox ref="searchInput" placeholder="Поиск абонента по ФИО, лицевому счету" prependIcon="mdi-magnify" />
+				<BaseTextBox ref="searchInput" placeholder="Поиск" prependIcon="mdi-magnify" />
 			</section>
 			<section class="actions" style="flex:auto 1 0; display:flex; gap:.5em;">
 

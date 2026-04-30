@@ -36,10 +36,14 @@
 				</template>
 			</li>
 		</ul>
+		<footer class="sidebar-footer">
+			<span>Version: {{ version }}</span>
+		</footer>
 	</section>
 </template>
 
 <script lang="ts" setup>
+import { version } from '../../package.json';
 import BaseIcon from './common/base/BaseIcon.vue';
 
 type SidebarLink = {
@@ -69,7 +73,7 @@ const links = ref<SidebarLink[]>([
 			{
 				title: 'Поиск абонентов',
 				link: '/clients',
-				icon: 'mdi-account-group',
+				icon: 'mdi-account-search',
 				disabled: true
 			},
 			{
@@ -154,6 +158,20 @@ const links = ref<SidebarLink[]>([
 		icon: 'mdi-map-marker',
 		disabled: true,
 		// Возможность менять даты
+		children: [
+			{
+				title: 'Изменить дату',
+				link: '/trips/calendar',
+				icon: 'mdi-calendar',
+				disabled: true
+			},
+			{
+				title: 'Назначить задачу',
+				link: '/trips/assign',
+				icon: 'mdi-account-check',
+				disabled: true
+			}
+		]
 	},
 
 	{
@@ -251,6 +269,13 @@ function handleDisabledLink(link: SidebarLink, event: Event) {
 				}
 			}
 		}
+	}
+
+	.sidebar-footer {
+		padding:1rem;
+		font-size: .9rem;
+		color:#ffffff22;
+		text-align: center;
 	}
 }
 </style>
