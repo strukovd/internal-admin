@@ -128,15 +128,13 @@ const links = ref<SidebarLink[]>([
 	},
 	{
 		title: 'Массовая замена',
-		link: '/mass-replacement',
-		icon: 'mdi-account-multiple',
-		disabled: true
+		link: '/meter-app/upload',
+		icon: 'mdi-account-multiple'
 	},
 	{
 		title: 'Онлайн квитанции',
-		link: '/invoices',
-		icon: 'mdi-invoice-text-multiple',
-		disabled: true
+		link: '/bills/upload',
+		icon: 'mdi-invoice-text-multiple'
 	},
 
 	{
@@ -156,29 +154,6 @@ const links = ref<SidebarLink[]>([
 		icon: 'mdi-map-marker',
 		disabled: true,
 		// Возможность менять даты
-	},
-
-	{
-		spacer: true,
-		class: 'splitter',
-	},
-	{
-		title: 'Жалобы',
-		link: '/complaints',
-		icon: 'mdi-alert-circle',
-		disabled: true
-	},
-	{
-		title: 'Ответственные лица',
-		link: '/responsibles',
-		icon: 'mdi-account-group',
-		disabled: true
-	},
-	{
-		title: 'FAQ',
-		link: '/faq',
-		icon: 'mdi-help-circle-outline',
-		disabled: true
 	},
 
 	{
