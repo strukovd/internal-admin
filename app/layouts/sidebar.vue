@@ -19,11 +19,11 @@
 			<section class="user-box" style="display:flex; align-items:center; gap:.5em;">
 				<!-- <img src="/img/user-avatar.png" alt="Аватар пользователя" /> -->
 				<div class="user-info" style="text-align:right;">
-					<div class="name" style="color:#171717; font-size:.9rem; font-weight:700;">Admin</div>
-					<div class="role" style="color:#737373; font-size:.8rem;">Администратор</div>
+					<div class="name" style="color:#171717; font-size:.9rem; font-weight:700;">{{ userStore.userData?.name || 'Admin' }}</div>
+					<div class="role" style="color:#737373; font-size:.8rem;">{{ userStore.userData?.role || 'Администратор' }}</div>
 				</div>
 				<div>
-					<div style="background: #2563ea; color:#feffff; padding:.3em; border-radius:50%; font-weight: 700; line-height:2em; width:2em; aspect-ratio:1/1; text-align:center;">А</div>
+					<div style="background: #2563ea; color:#feffff; padding:.3em; border-radius:50%; font-weight: 700; line-height:2em; width:2em; aspect-ratio:1/1; text-align:center;">{{ userInitial }}</div>
 				</div>
 				<BaseIcon @click="logout" name="mdi-logout" size="20" style="color:#a3a3a3;"/>
 			</section>
@@ -45,7 +45,7 @@ import Sidebar from '~/components/Sidebar.vue';
 
 const userStore = useUserStore();
 const searchInput = ref<any>(null);
-// if( !userStore.userData ) navigateTo('/login');
+const userInitial = computed(() => userStore.userData?.name?.[0]?.toUpperCase() || 'А');
 
 onMounted(() => {
 	enableAutofocus();
