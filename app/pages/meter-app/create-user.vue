@@ -10,15 +10,15 @@
 				<BaseAutocomplete v-model="form.role" label="Роль" disabled :error="errors.role" autoselect :items="[{ key: 'CONTROLER', value: 'Контролёр' }]"/>
 				<BaseTextBox v-model="form.contactNumber" label="Контактный номер (необязательно)" :error="errors.contactNumber"/>
 				<BaseTextBox v-model="form.email" label="Email (необязательно)" :error="errors.email"/>
-				<BaseTextBox v-model="form.passCode" label="Пин-код (необязательно)" :error="errors.passCode"/>
+				<BaseTextBox v-model="form.passCode" label="Pass-код (необязательно)" :error="errors.passCode"/>
 
 				<div v-if="submitError" style="align-items:center; background:#f8e7e7; border-radius:8px; color:#d32f2f; display:flex; font-size:13px; gap:8px; padding:10px 12px;">
 					<BaseIcon name="mdi-alert-circle" size="1.2em"/>
-					<span>{{ submitError }}</span>
+					<span v-html="submitError"></span>
 				</div>
 				<div v-if="submitSuccess" style="align-items:center; background:#e7f8ef; border-radius:8px; color:#058039; display:flex; font-size:13px; gap:8px; padding:10px 12px;">
 					<BaseIcon name="mdi-check-circle" size="1.2em"/>
-					<span>{{ submitSuccess }}</span>
+					<span v-html="submitSuccess"></span>
 				</div>
 				<BaseButton @click="sendForm" :disabled="isSubmitting" prependIcon="mdi-send">{{ isSubmitting ? 'Загрузка...' : 'Отправить' }}</BaseButton>
 			</form>
@@ -146,7 +146,8 @@ async function sendForm() {
 
 		const { id, login, passCode } = res.result;
 		resetForm();
-		submitSuccess.value = 'Пользователь создан! Логин: ' + login + (passCode ? ', пин-код: <strong>' + passCode : '</strong>') + ' (ID: ' + id + ')';
+
+		submitSuccess.value = `Пользователь создан! Логин: ${login} [${id}], пароль: <strong>${passCode ?? 'не указан'}</strong>`;
 	} catch (error: any) {
 		submitError.value = error?.data?.message ?? error?.message ?? 'Не удалось создать пользователя';
 	} finally {
