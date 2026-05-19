@@ -364,7 +364,7 @@ export default defineComponent({
 			font-size: 16px;
 			background: #FFFFFF;
 			border-radius: 6px;
-			border: 1px solid #E0E2E791;
+			border: 1px solid #d4d4d4;
 			line-height: 1.4em;
 			font-weight: 500;
 			box-shadow: none;

@@ -132,8 +132,20 @@ const links = ref<SidebarLink[]>([
 	},
 	{
 		title: 'Массовая замена',
-		link: '/meter-app/upload',
-		icon: 'mdi-account-multiple'
+		icon: 'mdi-account-multiple',
+		disabled: true,
+		children: [
+			{
+				title: 'Создание пользователя',
+				link: '/meter-app/create-user',
+				icon: 'mdi-file-document-plus-outline',
+			},
+			{
+				title: 'Загрузка файла',
+				link: '/meter-app/upload',
+				icon: 'mdi-upload',
+			},
+		]
 	},
 	{
 		title: 'Онлайн квитанции',
