@@ -6,10 +6,10 @@
 			:contenteditable="!isCellLocked(rowIndex, colIndex)"
 			spellcheck="false"
 			@focusout="onInput($event, rowIndex, colIndex)"
-			@keydown.enter.prevent="focusNext(rowIndex, colIndex)"
+			@keydown="onKeyDown($event, rowIndex, colIndex)"
 			:class="['cell', { locked: isCellLocked(rowIndex, colIndex) }]"
 		>
-			{{ rows[rowIndex][colIndex] }}
+			{{ rows[rowIndex]![colIndex] }}
 		</td>
 	</tr>
 </template>
@@ -46,25 +46,26 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		createEmptyRow(cols: number) {
+		createEmptyRow(cols: number): string[] {
 			return Array.from({ length: cols }, () => '');
 		},
 
-		trim(val: string | null | undefined) {
-		// убираем неразрывные пробелы/мягкие переводы строк/BR'ы, лишние пробелы
-		return (val ?? '')
-			.replace(/\u00A0/g, ' ')
-			.replace(/\u200B/g, '')
-			.replace(/<br\s*\/?>/gi, '\n')
-			.replace(/\s+/g, ' ')
-			.trim();
+		trim(val: string | null | undefined): string {
+			// убираем неразрывные пробелы/мягкие переводы строк/BR'ы, лишние пробелы
+			return (val ?? '')
+				.replace(/\u00A0/g, ' ')
+				.replace(/\u200B/g, '')
+				.replace(/<br\s*\/?>/gi, '\n')
+				.replace(/\s+/g, ' ')
+				.trim();
 		},
 
-		isRowEmpty(row: string[], rowIndex: number) {
+		isRowEmpty(row: string[], rowIndex: number): boolean {
 			if (this.isPresetRow(rowIndex)) return false;
 			return row.every(c => this.trim(c) === '');
 		},
 
+		/** Обеспечивает наличие последней пустой строки */
 		ensureInvariants() {
 			// 1) убрать пустые внутренние строки (все, кроме последней)
 			if (this.rows.length > 1) { // Если строк больше одной
@@ -76,7 +77,7 @@ export default defineComponent({
 			if (this.rows.length === 0) { // Если строк нет, добавляем пустую строку
 				this.rows.push(this.createEmptyRow(this.cols));
 			} // Если последняя строка не пустая, добавляем пустую строку
-			else if (!this.isRowEmpty(this.rows[this.rows.length - 1], this.rows.length - 1)) {
+			else if (!this.isRowEmpty(this.rows[this.rows.length - 1]!, this.rows.length - 1)) {
 				this.rows.push(this.createEmptyRow(this.cols));
 			}
 			// else { // Когда строки есть и последняя пустая, если вдруг накопились несколько пустых в конце — оставим одну
@@ -95,37 +96,79 @@ export default defineComponent({
 			// Записываем значение из DOM-ячейки в модель данных
 			const el = e.target as HTMLElement;
 			const text = this.trim(el.textContent ?? el.innerText);
-			this.rows[rowIndex][colIndex] = text;
+			this.rows[rowIndex]![colIndex] = text;
 
 			this.$emit('update:modelValue', this.rows);
 			this.ensureInvariants();
 		},
 
+		onKeyDown(e: KeyboardEvent, rowIndex: number, colIndex: number) {
+			[`Enter`, `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`].includes(e.code) && e.preventDefault();
+			switch (e.key) {
+				case 'Enter':
+					this.focusNext(rowIndex, colIndex);
+					break;
+				// case 'Tab':
+				// 	e.preventDefault();
+				// 	this.focusNext(rowIndex, colIndex);
+				// 	break;
+				case 'ArrowDown':
+					const nextRowIdx = rowIndex + 1;
+					if (nextRowIdx < this.rows.length) {
+						this.focusCell(nextRowIdx, colIndex);
+						break;
+					}
+					break;
+				case 'ArrowUp':
+					const prevRowIdx = rowIndex - 1;
+					if (prevRowIdx >= 0) {
+						this.focusCell(prevRowIdx, colIndex);
+					}
+					break;
+				case 'ArrowLeft':
+					this.focusCell(rowIndex, Math.max(colIndex - 1, 0));
+					break;
+				case 'ArrowRight':
+					this.focusCell(rowIndex, Math.min(colIndex + 1, this.cols - 1));
+					break;
+				default:
+					// Для остальных клавиш стандартное поведение (ввод текста)
+					break;
+			}
+		},
+
 		focusNext(rowIndex: number, colIndex: number) {
 			// переход по Enter к след. ячейке/строке, добавляя хвостовую пустую при необходимости
 			const lastRowIdx = this.rows.length - 1;
-			if (rowIndex === lastRowIdx && !this.isRowEmpty(this.rows[rowIndex], rowIndex)) {
+			// Если мы в последней строке и она не пустая, добавляем новую пустую строку
+			if (rowIndex === lastRowIdx && !this.isRowEmpty(this.rows[rowIndex]!, rowIndex)) {
 				this.rows.push(this.createEmptyRow(this.cols));
 			}
 
+			// Смещаем фокус на следующую ячейку
 			let nextRow = rowIndex;
 			let nextCol = colIndex + 1;
+			// Если вышли за пределы полей, переходим на следующую строку
 			if (nextCol >= this.cols) {
 				nextCol = 0;
 				nextRow = Math.min(rowIndex + 1, this.rows.length - 1);
 			}
 
 			// Фокус на следующую ячейку
-			queueMicrotask(() => {
-				// TODO: селектор будет путаться если будет несколько таблиц, обеспечить уникальность
-				const cell = document.querySelectorAll<HTMLTableCellElement>('tbody td')[nextRow * this.cols + nextCol];
-				if (cell) {
-					cell.focus();
-					this.placeCaretAtEnd(cell);
-				}
+			this.focusCell(nextRow, nextCol);
+		},
+
+		focusCell(rowIndex: number, colIndex: number) {
+			this.$nextTick(() => {
+				const cell = document.querySelectorAll<HTMLTableCellElement>('tbody td.cell')[rowIndex * this.cols + colIndex];
+				if (!cell) return;
+
+				cell.focus();
+				this.placeCaretAtEnd(cell);
 			});
 		},
 
+		/** Помещает каретку в конец текста (для удобства при фокусе) */
 		placeCaretAtEnd(node: HTMLElement) {
 			const range = document.createRange();
 			range.selectNodeContents(node);
