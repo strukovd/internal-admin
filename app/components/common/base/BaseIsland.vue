@@ -26,6 +26,7 @@ const props = defineProps({
 	padding:1.6em;
 	margin-top:1em;
 	border-radius:12px;
+	overflow: auto;
 	
 	&:not(:last-child) {
 		margin-bottom: 1.6em;

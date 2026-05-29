@@ -27,7 +27,7 @@ type Form = {
 	saveBalance: boolean
 }
 
-const { $api } = useNuxtApp();
+const { $fetchReportHandler } = useNuxtApp();
 
 const form = ref<Form>({
 	file: null,
@@ -71,7 +71,7 @@ async function sendForm() {
 
 	try {
 		isSubmitting.value = true;
-		await $api(uploadEndpoint, {
+		await $fetchReportHandler(uploadEndpoint, {
 			method: 'POST',
 			body
 		});

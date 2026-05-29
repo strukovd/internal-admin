@@ -33,6 +33,12 @@ import BaseButton from '~/components/common/base/BaseButton.vue';
 import BaseIcon from '~/components/common/base/BaseIcon.vue';
 import BaseIsland from '~/components/common/base/BaseIsland.vue';
 import BaseTextBox from '~/components/common/base/BaseTextBox.vue';
+const { $fetchMeterApp } = useNuxtApp();
+definePageMeta({
+	// auth: true,
+	// roles: ['ADMIN', 'MANAGER'],
+	layout: 'sidebar'
+});
 type Form = {
 	login: string,
 	passCode: string,
@@ -44,7 +50,6 @@ type Form = {
 	role: 'CONTROLER' | null
 }
 
-const { $meterApi } = useNuxtApp();
 
 const form = ref<Form>({
 	login: '',
@@ -91,12 +96,6 @@ const normalizeStreetOptions = computed(() => {
 	}));
 });
 
-definePageMeta({
-	// auth: true,
-	// roles: ['ADMIN', 'MANAGER'],
-	layout: 'sidebar'
-});
-
 function validateForm() {
 	const nextErrors: Partial<Record<keyof Form, string>> = {};
 
@@ -136,7 +135,7 @@ async function sendForm() {
 
 	try {
 		isSubmitting.value = true;
-		const res: any = await $meterApi(uploadEndpoint, {
+		const res: any = await $fetchMeterApp(uploadEndpoint, {
 			method: 'POST',
 			body: JSON.stringify({
 				...form.value,

@@ -107,7 +107,13 @@ const links = ref<SidebarLink[]>([
 				class: 'splitter',
 			},
 			{
-				title: 'Загрузка абонентов',
+				title: 'Создание',
+				link: '/counterparty/create',
+				icon: 'mdi-account-plus',
+				// Возможность переотправки сообщений
+			},
+			{
+				title: 'Загрузка',
 				link: '/counterparty/upload',
 				icon: 'mdi-account-multiple-plus',
 				// Возможность переотправки сообщений

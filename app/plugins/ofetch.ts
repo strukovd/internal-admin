@@ -31,9 +31,10 @@ export default defineNuxtPlugin(() => {
 		},
 	});
 
-	const apiFetch = createApiClient(config.public.apiURL);
-	const meterApiFetch = createApiClient(config.public.meterAppApiURL);
+	const reportHandlerFetch = createApiClient(config.public.REPORT_HANDLER_API_BASE);
+	const meterApiFetch = createApiClient(config.public.METER_APP_API_BASE);
+	const facilityApiFetch = createApiClient(config.public.FACILITY_API_BASE);
 
-	// Делаем доступным как $api и $meterApi
-	return { provide: { api: apiFetch, meterApi: meterApiFetch } };
+	// Делаем доступным как $fetchReportHandler и $fetchMeterApp
+	return { provide: { fetchReportHandler: reportHandlerFetch, fetchMeterApp: meterApiFetch, fetchFacility: facilityApiFetch } };
 })
