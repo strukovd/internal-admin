@@ -133,8 +133,7 @@ const links = ref<SidebarLink[]>([
 	{
 		title: 'Тарифы',
 		link: '/tariffs',
-		icon: 'mdi-currency-usd',
-		disabled: true
+		icon: 'mdi-currency-usd'
 	},
 	{
 		title: 'Массовая замена',
