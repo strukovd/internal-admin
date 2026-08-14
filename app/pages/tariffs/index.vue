@@ -77,7 +77,7 @@
 				</template>
 
 				<template #cell.type="{ value }">
-					<span class="tp-type badge">{{ getTypeLabel(String(value)) }}</span>
+					<span class="tp-type">{{ getTypeLabel(String(value)) }}</span>
 				</template>
 
 				<template #cell.value="{ value }">
@@ -152,8 +152,8 @@ const columns = [
 	{ key: 'id', label: 'ID', width: '80px' },
 	// { key: 'date', label: 'Дата', width: '130px' },
 	{ key: 'created', label: 'Создан', width: '50px' },
-	// { key: 'type', label: 'Тип', width: '120px' },
 	{ key: 'value', label: 'Тариф', width: '120px' },
+	{ key: 'type', label: 'Тип', width: '120px' },
 	{ key: 'actions', label: '', width: '300px', cellClass: 'tp-actions-cell' },
 ];
 
