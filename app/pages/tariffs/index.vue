@@ -66,17 +66,14 @@
 			>
 				<template #cell.id="{ row, value }">
 					<section class="tp-id-cell">
-						<img class="tp-month-picture" :src="getMonthImage(row)" alt="" loading="lazy">
+						<img class="tp-month-picture" :src="getMonthImage(row)" loading="lazy">
 						<span class="tp-id-value">{{ value }}</span>
 					</section>
 				</template>
 
-				<!-- <template #cell.date="{ value }">
-					<span class="tp-date">{{ formatDate(value as Date) }}</span>
-				</template> -->
-
-				<template #cell.created="{ value }">
-					<span class="tp-date badge">{{ formatDate(value as Date) }}</span>
+				<template #cell.created="{ row, value }">
+					<span class="tp-month-name">на {{ getMonthTitle(row) }}</span>
+					<div class="tp-date">{{ formatDate(value as Date) }}</div>
 				</template>
 
 				<template #cell.type="{ value }">
@@ -84,23 +81,16 @@
 				</template>
 
 				<template #cell.value="{ value }">
-					<span class="tp-value">{{ formatNumber(value) }}</span>
+					<span class="tp-value badge">
+						{{ value }}
+					</span>
 				</template>
 
 				<template #cell.actions="{ row }">
 					<div class="tp-actions">
-						<BaseButton variant="light" prependIcon="mdi-pencil" @click.stop="editTariff(row)">
-							Изменить
-						</BaseButton>
-						<BaseButton variant="light" prependIcon="mdi-content-copy" @click.stop="copyTariff(row)">
-							Копия
-						</BaseButton>
-						<BaseButton
-							variant="secondary"
-							prependIcon="mdi-delete-outline"
-							:disabled="deletingTariffId === Number(row.id)"
-							@click.stop="deleteTariff(row)"
-						>
+						<BaseButton variant="secondary" prependIcon="mdi-pencil" @click.stop="editTariff(row)">Изменить</BaseButton>
+						<BaseButton variant="secondary" prependIcon="mdi-content-copy" @click.stop="copyTariff(row)">Копия</BaseButton>
+						<BaseButton variant="secondary" prependIcon="mdi-delete-outline" :disabled="deletingTariffId === Number(row.id)" @click.stop="deleteTariff(row)">
 							{{ deletingTariffId === Number(row.id) ? 'Удаление...' : 'Удалить' }}
 						</BaseButton>
 					</div>
@@ -161,8 +151,8 @@ type TariffListResponse = {
 const columns = [
 	{ key: 'id', label: 'ID', width: '80px' },
 	// { key: 'date', label: 'Дата', width: '130px' },
-	{ key: 'created', label: 'Создан', width: '260px' },
-	{ key: 'type', label: 'Тип', width: '120px' },
+	{ key: 'created', label: 'Создан', width: '50px' },
+	// { key: 'type', label: 'Тип', width: '120px' },
 	{ key: 'value', label: 'Тариф', width: '120px' },
 	{ key: 'actions', label: '', width: '300px', cellClass: 'tp-actions-cell' },
 ];
@@ -401,15 +391,24 @@ function getTypeLabel(type: string) {
 }
 
 function getMonthImage(row: Record<string, unknown>) {
-	const monthName = getMonthName(row);
+	const tariffDate = getTariffDate(row);
+	const monthName = tariffDate?.toLocaleString('en-EN', { month: 'short' }).toLowerCase() ?? 'jan';
+
 	return `/pics/${monthName}.webp`;
 }
 
-function getMonthName(row: Record<string, unknown>) {
-	const months = ["jan", "feb", "mar", "apr", "may", "jun", 
-                "jul", "aug", "sep", "oct", "nov", "dec"];
-	const monthIndex = getMonthIndex(row.date ?? row.created);
-	return months[monthIndex ?? 0];
+const capitalize = (str: string) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+function getMonthTitle(row: Record<string, unknown>) {
+	const tariffDate = getTariffDate(row);
+	return tariffDate?.toLocaleString('ru-RU', { month: 'long' }) ?? '';
+}
+
+function getTariffDate(row: Record<string, unknown>) {
+	const value = row.date ?? row.created;
+	const date = new Date(String(value));
+
+	return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getColorSet(row: Record<string, unknown>) {
@@ -475,7 +474,7 @@ function getColorSet(row: Record<string, unknown>) {
 			rowBg: '#F2F6FE'
 		}
 	];
-	const monthIndex = getMonthIndex(row.date ?? row.created);
+	const monthIndex = getTariffDate(row)?.getMonth() ?? 0;
 	const colorSet = colors[monthIndex ?? 0];
 
 	return {
@@ -483,31 +482,6 @@ function getColorSet(row: Record<string, unknown>) {
 		'--badge-color': colorSet.badgeColor,
 		'--row-bg': colorSet.rowBg,
 	};
-}
-
-function getMonthIndex(value: unknown) {
-	if(!value) return null;
-
-	const stringValue = String(value);
-	const monthMatch = stringValue.match(/^\d{4}-(\d{2})/);
-	if(monthMatch) {
-		const monthIndex = Number(monthMatch[1]) - 1;
-		if(monthIndex >= 0 && monthIndex <= 11) return monthIndex;
-	}
-
-	const date = new Date(stringValue);
-	if(Number.isNaN(date.getTime())) return null;
-
-	return date.getMonth();
-}
-
-function formatNumber(value: unknown) {
-	const numberValue = Number(value);
-	if(Number.isNaN(numberValue)) return '-';
-
-	return numberValue.toLocaleString('ru-RU', {
-		maximumFractionDigits: 5
-	});
 }
 
 function normalizeInputDate(value: unknown) {
@@ -643,16 +617,33 @@ function normalizeInputDate(value: unknown) {
 
 				.tp-id-value {
 					position: relative;
+					top:-26px;
+					left: 80px;
 					z-index: 1;
 					font-weight: 700;
+					color:#00000055;
+					filter: drop-shadow(0 0 1px #fff);
+				}
+			}
+
+			td:has(.tp-date) {
+				position: relative;
+				z-index: 1;
+				text-align: center;
+
+				.tp-date {
+					font-size: .8em;
+					margin-top: .6em;
+					color: #777;
 				}
 			}
 
 			.tp-type {}
 
-			.tp-value {
-				font-weight: 700;
-				color: #171717;
+			td:has(.tp-value) {
+				position: relative;
+				z-index: 1;
+				text-align: center;
 			}
 		}
 
