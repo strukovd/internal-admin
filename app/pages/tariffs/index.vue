@@ -2,19 +2,19 @@
 	<section class="tariffs-page">
 		<BaseBreadcrumbs :breadcrumbs="[{ title: 'Главная', link: '/' }, { title: 'Тарифы' }]"/>
 
-		<div class="tariffs-page__header">
+		<div class="tp-header">
 			<div>
-				<h1>Тарифы</h1>
+				<h1 class="tp-title">Тарифы</h1>
 			</div>
-			<div class="tariffs-page__header-actions">
+			<div class="tp-header-actions">
 				<BaseButton variant="secondary" prependIcon="mdi-refresh" :disabled="isLoading" @click="fetchTariffs">Обновить</BaseButton>
 				<BaseButton :prependIcon="isFormVisible ? 'mdi-close' : 'mdi-plus'" @click="toggleForm">{{ isFormVisible ? 'Закрыть' : 'Добавить тариф' }}</BaseButton>
 			</div>
 		</div>
 
 		<BaseIsland v-if="isFormVisible" :title="formTitle" prependIcon="mdi-cash-plus">
-			<form class="tariff-form" @submit.prevent="submitTariff">
-				<div class="tariff-form__grid">
+			<form class="tp-form" @submit.prevent="submitTariff">
+				<div class="tp-form-grid">
 					<BaseTextBox v-model="form.value" type="number" label="Значение" :error="errors.value"/>
 					<BaseAutocomplete v-model="form.type" label="Тип" :error="errors.type" :items="typeOptions"/>
 					<BaseTextBox v-model="form.date" type="date" label="Дата начала" :error="errors.date"/>
@@ -23,16 +23,16 @@
 					<BaseTextBox v-model="form.nsp" type="number" label="НСП" :error="errors.nsp"/>
 				</div>
 
-				<div v-if="submitSuccess" class="tariff-message tariff-message--success">
+				<div v-if="submitSuccess" class="tp-message success">
 					<BaseIcon name="mdi-check-circle" size="1.2em"/>
 					<span>{{ submitSuccess }}</span>
 				</div>
-				<div v-if="submitError" class="tariff-message tariff-message--error">
+				<div v-if="submitError" class="tp-message error">
 					<BaseIcon name="mdi-alert-circle" size="1.2em"/>
 					<span>{{ submitError }}</span>
 				</div>
 
-				<div class="tariff-form__actions">
+				<div class="tp-form-actions">
 					<BaseButton prependIcon="mdi-content-save" :disabled="isSubmitting" @click="submitTariff">{{ submitButtonText }}</BaseButton>
 					<BaseButton variant="secondary" prependIcon="mdi-refresh" @click="resetForm">Сбросить</BaseButton>
 				</div>
@@ -40,13 +40,13 @@
 		</BaseIsland>
 
 		<BaseIsland title="Список тарифов" prependIcon="mdi-table">
-			<div class="tariff-filters">
+			<div class="tp-filters">
 				<BaseAutocomplete label="Тип" v-model="filters.type" :items="typeOptions" placeholder="Все" @change="applyFilters"/>
 				<BaseAutocomplete label="Сортировка" v-model="filters.sortOrder" :items="[{ key: 'DESC', value: 'Сначала новые' }, { key: 'ASC', value: 'Сначала старые' }]" placeholder="Все" @change="applyFilters"/>
 				<BaseAutocomplete label="Лимит" v-model.number="limit" :items="[{ key: 10, value: '10' }, { key: 25, value: '25' }, { key: 50, value: '50' }, { key: 100, value: '100' }]" placeholder="Все" @change="applyFilters"/>
 			</div>
 
-			<div v-if="loadError" class="tariff-message tariff-message--error tariff-message--spaced">
+			<div v-if="loadError" class="tp-message error spaced">
 				<BaseIcon name="mdi-alert-circle" size="1.2em"/>
 				<span>{{ loadError }}</span>
 			</div>
@@ -56,6 +56,7 @@
 				:columns="columns"
 				:rows="tableRows"
 				:loading="isLoading"
+				:row-style="getColorSet"
 				rowKey="id"
 				pageable
 				:page="page"
@@ -63,24 +64,31 @@
 				:total="total"
 				@page:change="changePage"
 			>
-				<template #cell.date="{ value }">
-					<span class="tariff-date">{{ formatDate(value) }}</span>
+				<template #cell.id="{ row, value }">
+					<section class="tp-id-cell">
+						<img class="tp-month-picture" :src="getMonthImage(row)" alt="" loading="lazy">
+						<span class="tp-id-value">{{ value }}</span>
+					</section>
 				</template>
 
+				<!-- <template #cell.date="{ value }">
+					<span class="tp-date">{{ formatDate(value as Date) }}</span>
+				</template> -->
+
 				<template #cell.created="{ value }">
-					<span class="tariff-date">{{ formatDateTime(value) }}</span>
+					<span class="tp-date badge">{{ formatDate(value as Date) }}</span>
 				</template>
 
 				<template #cell.type="{ value }">
-					<span class="tariff-type">{{ getTypeLabel(String(value)) }}</span>
+					<span class="tp-type badge">{{ getTypeLabel(String(value)) }}</span>
 				</template>
 
 				<template #cell.value="{ value }">
-					<span class="tariff-value">{{ formatNumber(value) }}</span>
+					<span class="tp-value">{{ formatNumber(value) }}</span>
 				</template>
 
 				<template #cell.actions="{ row }">
-					<div class="tariff-actions">
+					<div class="tp-actions">
 						<BaseButton variant="light" prependIcon="mdi-pencil" @click.stop="editTariff(row)">
 							Изменить
 						</BaseButton>
@@ -152,11 +160,11 @@ type TariffListResponse = {
 
 const columns = [
 	{ key: 'id', label: 'ID', width: '80px' },
-	{ key: 'date', label: 'Дата', width: '130px' },
+	// { key: 'date', label: 'Дата', width: '130px' },
+	{ key: 'created', label: 'Создан', width: '260px' },
 	{ key: 'type', label: 'Тип', width: '120px' },
 	{ key: 'value', label: 'Тариф', width: '120px' },
-	{ key: 'created', label: 'Создан', width: '180px' },
-	{ key: 'actions', label: '', width: '300px', cellClass: 'tariffs-page__actions-cell' },
+	{ key: 'actions', label: '', width: '300px', cellClass: 'tp-actions-cell' },
 ];
 
 const typeOptions = [
@@ -392,6 +400,107 @@ function getTypeLabel(type: string) {
 	return typeOptions.find(item => item.key === type)?.value ?? type;
 }
 
+function getMonthImage(row: Record<string, unknown>) {
+	const monthName = getMonthName(row);
+	return `/pics/${monthName}.webp`;
+}
+
+function getMonthName(row: Record<string, unknown>) {
+	const months = ["jan", "feb", "mar", "apr", "may", "jun", 
+                "jul", "aug", "sep", "oct", "nov", "dec"];
+	const monthIndex = getMonthIndex(row.date ?? row.created);
+	return months[monthIndex ?? 0];
+}
+
+function getColorSet(row: Record<string, unknown>) {
+	const colors = [
+		{
+			badgeBg: '#DCEAFC',
+			badgeColor: '#084698',
+			rowBg: '#F5F8FE'
+		},
+		{
+			badgeBg: '#D9E8FB',
+			badgeColor: '#013988',
+			rowBg: '#F7F9FD'
+		},
+		{
+			badgeBg: '#E9F2DC',
+			badgeColor: '#4B8A00',
+			rowBg: '#FAFBF6'
+		},
+		{
+			badgeBg: '#FDE2EA',
+			badgeColor: '#C60A44',
+			rowBg: '#FEF8FA'
+		},
+		{
+			badgeBg: '#EAF4DC',
+			badgeColor: '#0C7202',
+			rowBg: '#F9FBF5'
+		},
+		{
+			badgeBg: '#FEF2CD',
+			badgeColor: '#A96B00',
+			rowBg: '#FFFAEE'
+		},
+		{
+			badgeBg: '#D6F1F2',
+			badgeColor: '#086A6E',
+			rowBg: '#F4FBFB'
+		},
+		{
+			badgeBg: '#FEECCB',
+			badgeColor: '#D65F0F',
+			rowBg: '#FDF8EF'
+		},
+		{
+			badgeBg: '#FCEBD6',
+			badgeColor: '#8A310D',
+			rowBg: '#FEFAF4'
+		},
+		{
+			badgeBg: '#FDE6CD',
+			badgeColor: '#C7471C',
+			rowBg: '#FEF6EF'
+		},
+		{
+			badgeBg: '#EEE6DD',
+			badgeColor: '#69492D',
+			rowBg: '#F9F5F3'
+		},
+		{
+			badgeBg: '#DDE9FB',
+			badgeColor: '#054C97',
+			rowBg: '#F2F6FE'
+		}
+	];
+	const monthIndex = getMonthIndex(row.date ?? row.created);
+	const colorSet = colors[monthIndex ?? 0];
+
+	return {
+		'--badge-bg': colorSet.badgeBg,
+		'--badge-color': colorSet.badgeColor,
+		'--row-bg': colorSet.rowBg,
+	};
+}
+
+function getMonthIndex(value: unknown) {
+	if(!value) return null;
+
+	const stringValue = String(value);
+	const monthMatch = stringValue.match(/^\d{4}-(\d{2})/);
+	if(monthMatch) {
+		const monthIndex = Number(monthMatch[1]) - 1;
+		if(monthIndex >= 0 && monthIndex <= 11) return monthIndex;
+	}
+
+	const date = new Date(stringValue);
+	if(Number.isNaN(date.getTime())) return null;
+
+	return date.getMonth();
+}
+
 function formatNumber(value: unknown) {
 	const numberValue = Number(value);
 	if(Number.isNaN(numberValue)) return '-';
@@ -399,15 +508,6 @@ function formatNumber(value: unknown) {
 	return numberValue.toLocaleString('ru-RU', {
 		maximumFractionDigits: 5
 	});
-}
-
-function formatDate(value: unknown) {
-	if(!value) return '-';
-
-	const date = new Date(String(value));
-	if(Number.isNaN(date.getTime())) return String(value);
-
-	return date.toLocaleDateString('ru-RU');
 }
 
 function normalizeInputDate(value: unknown) {
@@ -421,71 +521,65 @@ function normalizeInputDate(value: unknown) {
 
 	return date.toISOString().slice(0, 10);
 }
-
-function formatDateTime(value: unknown) {
-	if(!value) return '-';
-
-	const date = new Date(String(value));
-	if(Number.isNaN(date.getTime())) return String(value);
-
-	return date.toLocaleString('ru-RU', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-	});
-}
 </script>
 
 <style lang="scss">
 .tariffs-page {
 	color: #172b4d;
 
-	&__header {
+	.tp-header {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 1em;
 		margin-top: .8em;
 
-		h1 {
+		.tp-title {
 			margin: 0;
 			font-size: 28px;
 			line-height: 1.2em;
 		}
 
-		p {
-			margin: .35em 0 0;
-			color: #737373;
-			font-size: .95rem;
+		.tp-header-actions {
+			display: flex;
+			align-items: center;
+			gap: .7em;
+			flex-wrap: wrap;
+			justify-content: flex-end;
 		}
 	}
 
-	&__actions-cell {
-		text-align: right;
-	}
-
-	&__header-actions {
-		display: flex;
-		align-items: center;
-		gap: .7em;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-	}
-
-	.tariff-form {
+	.tp-form {
 		display: flex;
 		flex-direction: column;
 		gap: 1em;
 
-		&__grid {
+		.tp-form-grid {
 			display: grid;
 			grid-template-columns: repeat(3, minmax(180px, 1fr));
 			gap: 1em;
 		}
 
-		&__actions {
+		.tp-message {
+			align-items: center;
+			border-radius: 8px;
+			display: flex;
+			font-size: 13px;
+			gap: 8px;
+			padding: 10px 12px;
+
+			&.success {
+				background: #e7f8ef;
+				color: #058039;
+			}
+
+			&.error {
+				background: #f8e7e7;
+				color: #d32f2f;
+			}
+		}
+
+		.tp-form-actions {
 			display: flex;
 			align-items: center;
 			gap: .7em;
@@ -493,30 +587,7 @@ function formatDateTime(value: unknown) {
 		}
 	}
 
-	.tariff-message {
-		align-items: center;
-		border-radius: 8px;
-		display: flex;
-		font-size: 13px;
-		gap: 8px;
-		padding: 10px 12px;
-
-		&--success {
-			background: #e7f8ef;
-			color: #058039;
-		}
-
-		&--error {
-			background: #f8e7e7;
-			color: #d32f2f;
-		}
-
-		&--spaced {
-			margin-bottom: 1em;
-		}
-	}
-
-	.tariff-filters {
+	.tp-filters {
 		display: flex;
 		align-items: flex-end;
 		gap: 1em;
@@ -524,51 +595,111 @@ function formatDateTime(value: unknown) {
 		margin-bottom: 1em;
 	}
 
-	.tariff-type {
-		display: inline-flex;
+	.tp-message {
 		align-items: center;
-		min-width: 86px;
-		border-radius: 999px;
-		background: #eef4ff;
-		color: #114bc8;
-		font-weight: 700;
-		justify-content: center;
-		padding: .3em .65em;
-	}
-
-	.tariff-value {
-		font-weight: 700;
-		color: #171717;
-	}
-
-	.tariff-actions {
+		border-radius: 8px;
 		display: flex;
-		justify-content: flex-end;
-		gap: .5em;
+		font-size: 13px;
+		gap: 8px;
+		padding: 10px 12px;
+
+		&.error {
+			background: #f8e7e7;
+			color: #d32f2f;
+		}
+
+		&.spaced {
+			margin-bottom: 1em;
+		}
+	}
+
+	.base-table {
+		.bt-tbody {
+			tr {
+				border-radius: 7px;
+				overflow: hidden;
+				background: var(--row-bg, #fff);
+			}
+
+			.base-table__cell {
+				&:has(.tp-id-cell) {
+					position: relative;
+					height: 80px;
+					min-height: 60px;
+				}
+			}
+
+			.tp-id-cell {
+				.tp-month-picture {
+					position: absolute;
+					left: 0;
+					bottom: 0;
+					height: 100%;
+					object-fit: cover;
+					border-radius: 7px;
+					// opacity: .34;
+					pointer-events: none;
+				}
+
+				.tp-id-value {
+					position: relative;
+					z-index: 1;
+					font-weight: 700;
+				}
+			}
+
+			.tp-type {}
+
+			.tp-value {
+				font-weight: 700;
+				color: #171717;
+			}
+		}
+
+		.tp-actions-cell {
+			text-align: right;
+
+			.tp-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: .5em;
+			}
+		}
+
+		.badge {
+			// display: inline-flex;
+			// align-items: center;
+			// justify-content: center;
+			border-radius: 999px;
+			background: var(--badge-bg, #eef4ff);
+			color: var(--badge-color, #114bc8);
+			font-weight: 700;
+			padding: .3em 1em;
+			position: relative;
+			z-index: 100;
+		}
 	}
 }
 
 @media (max-width: 900px) {
 	.tariffs-page {
-		&__header {
+		.tp-header {
 			align-items: stretch;
 			flex-direction: column;
+
+			.tp-header-actions {
+				justify-content: flex-start;
+			}
 		}
 
-		&__header-actions {
+		.tp-form {
+			.tp-form-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.tp-actions {
 			justify-content: flex-start;
-		}
-
-		.tariff-form__grid {
-			grid-template-columns: 1fr;
-		}
-
-		.tariff-actions {
-			justify-content: flex-start;
-		}
-
-		.tariff-filter {
-			flex: auto 1 1;
 		}
 	}
 }

@@ -37,6 +37,7 @@
 						v-for="(row, rowIndex) of rows"
 						:key="getRowKey(row, rowIndex)"
 						class="base-table-row"
+						:style="getRowStyle(row, rowIndex)"
 						@click="emit('row:click', row, rowIndex)"
 					>
 						<td v-for="column of columns" :key="column.key" :class="['base-table__cell', column.cellClass]">
@@ -70,12 +71,14 @@ type TableColumn = {
 };
 
 type TableRow = Record<string, unknown>;
+type TableRowStyle = Record<string, string | number> | ((row: TableRow, index: number) => Record<string, string | number>);
 
 const props = withDefaults(defineProps<{
 	columns: TableColumn[];
 	rows: TableRow[];
 	loading?: boolean;
 	rowKey?: string | ((row: TableRow, index: number) => string | number);
+	rowStyle?: TableRowStyle;
 	pageable?: boolean;
 	page?: number;
 	limit?: number;
@@ -130,6 +133,14 @@ function getRowKey(row: TableRow, index: number): string | number {
 	}
 
 	return index;
+}
+
+function getRowStyle(row: TableRow, index: number) {
+	if(typeof props.rowStyle === 'function') {
+		return props.rowStyle(row, index);
+	}
+
+	return props.rowStyle ?? {};
 }
 
 function changePage(page: number) {
