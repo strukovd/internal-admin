@@ -41,7 +41,7 @@
 
 		<BaseIsland title="Список тарифов" prependIcon="mdi-table">
 			<div class="tp-filters">
-				<BaseAutocomplete label="Тип" v-model="filters.type" :items="typeOptions" placeholder="Все" @change="applyFilters"/>
+				<BaseAutocomplete label="Тип" autoselect v-model="filters.type" :items="typeOptions" placeholder="Все" @change="applyFilters"/>
 				<BaseAutocomplete label="Сортировка" v-model="filters.sortOrder" :items="[{ key: 'DESC', value: 'Сначала новые' }, { key: 'ASC', value: 'Сначала старые' }]" placeholder="Все" @change="applyFilters"/>
 				<BaseAutocomplete label="Лимит" v-model.number="limit" :items="[{ key: 10, value: '10' }, { key: 25, value: '25' }, { key: 50, value: '50' }, { key: 100, value: '100' }]" placeholder="Все" @change="applyFilters"/>
 			</div>
@@ -116,12 +116,13 @@ definePageMeta({
 });
 
 type TariffType = 'FL' | 'UL';
+const noOfficeKey = 'NO_OFFICE';
 
 type TariffForm = {
 	value: number | string,
 	type: TariffType | '',
 	date: string,
-	officeId: number | string | null,
+	officeId: number | typeof noOfficeKey,
 	nds: number | string,
 	nsp: number | string,
 };
@@ -163,21 +164,24 @@ const typeOptions = [
 ];
 
 const offices: Record<number, string> = {
-	1: 'г.Кара-Балта, ул.Садовая,112',
-	2: 'с.Ленинское, ул.Алма-Атинская,248',
-	3: 'с. Аманбаево - ул. Толстунова, 8',
-	4: 'г. Ош - ул. Ленина, 146',
-	5: 'г. Джалал-Абад - ул. Ленина, 2',
+	// 1: 'г.Кара-Балта, ул.Садовая,112',
+	// 2: 'с.Ленинское, ул.Алма-Атинская,248',
+	// 3: 'с. Аманбаево - ул. Толстунова, 8',
+	// 4: 'г. Ош - ул. Ленина, 146',
+	// 5: 'г. Джалал-Абад - ул. Ленина, 2',
 	14: 'Майлы-Суу - ул. Коммунистическая, б/н',
-	15: 'ул.И. Ахунбаева,186/1',
-	16: 'Жибек-Жолу, 150',
-	19: 'г.Кант, ул.Маликова,6',
+	// 15: 'ул.И. Ахунбаева,186/1',
+	// 16: 'Жибек-Жолу, 150',
+	// 19: 'г.Кант, ул.Маликова,6',
 };
 
-const officeOptions = computed(() => Object.entries(offices).map(([key, value]) => ({
-	key,
-	value
-})));
+const officeOptions = computed(() => [
+	{ key: noOfficeKey, value: 'Не выбрано' },
+	...Object.entries(offices).map(([key, value]) => ({
+		key: Number(key),
+		value,
+	})),
+]);
 
 const isFormVisible = ref(false);
 const isLoading = ref(false);
@@ -212,12 +216,24 @@ onMounted(() => {
 	fetchTariffs();
 });
 
+function getFirstDayOfMonth(baseDate = new Date()) {
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+  const day = baseDate.getDate();
+
+  // Если сегодня до 15-го числа -> 1-е число текущего месяца.
+  // Если 15-е число и позже -> 1-е число следующего месяца.
+  return day < 15 
+    ? new Date(year, month, 1) 
+    : new Date(year, month + 1, 1);
+}
+
 function getInitialForm(): TariffForm {
 	return {
 		value: 0,
 		type: 'FL',
-		date: '2026-06-01',
-		officeId: 14,
+		date: getFirstDayOfMonth().toLocaleDateString('fr-CA'),
+		officeId: noOfficeKey,
 		nds: 2,
 		nsp: 14,
 	};
@@ -236,7 +252,6 @@ function validateForm() {
 	if(form.value.value === '' || Number(form.value.value) < 0) nextErrors.value = 'Укажите значение';
 	if(!form.value.type) nextErrors.type = 'Выберите тип';
 	if(!form.value.date) nextErrors.date = 'Укажите дату';
-	if(!form.value.officeId) nextErrors.officeId = 'Выберите офис';
 	if(form.value.nds === '' || Number(form.value.nds) < 0) nextErrors.nds = 'Укажите НДС';
 	if(form.value.nsp === '' || Number(form.value.nsp) < 0) nextErrors.nsp = 'Укажите НСП';
 
@@ -249,7 +264,7 @@ function normalizeForm() {
 		value: Number(form.value.value),
 		type: form.value.type as TariffType,
 		date: form.value.date,
-		officeId: Number(form.value.officeId),
+		...(form.value.officeId !== noOfficeKey ? { officeId: form.value.officeId } : {}),
 		nds: Number(form.value.nds),
 		nsp: Number(form.value.nsp),
 	};
