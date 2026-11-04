@@ -134,8 +134,8 @@ type TariffRow = {
 	date: string | null,
 	created: string,
 	officeId?: number,
-	nds?: number,
-	nsp?: number,
+	nds?: number | null,
+	nsp?: number | null,
 };
 
 type TariffListResponse = {
@@ -234,8 +234,8 @@ function getInitialForm(): TariffForm {
 		type: 'FL',
 		date: getFirstDayOfMonth().toLocaleDateString('fr-CA'),
 		officeId: noOfficeKey,
-		nds: 2,
-		nsp: 14,
+		nds: '',
+		nsp: '',
 	};
 }
 

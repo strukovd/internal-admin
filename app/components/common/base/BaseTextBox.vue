@@ -144,7 +144,7 @@ export default defineComponent({
 				(event.target as HTMLInputElement).value = masked;
 			}
 
-			this.valueProxy = this.type === 'number' && !this.mask ? Number(masked) : masked;
+			this.valueProxy = this.type === 'number' && !this.mask && masked !== '' ? Number(masked) : masked;
 		}
 	},
 	created() {
