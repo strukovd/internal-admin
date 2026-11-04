@@ -177,6 +177,11 @@ const links = ref<SidebarLink[]>([
 		// Возможность менять даты
 		children: [
 			{
+				title: 'Переназначение',
+				link: '/trips/replace-user',
+				icon: 'mdi-account-switch-outline',
+			},
+			{
 				title: 'Изменить дату',
 				link: '/trips/calendar',
 				icon: 'mdi-calendar',
