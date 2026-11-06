@@ -182,6 +182,11 @@ const links = ref<SidebarLink[]>([
 				icon: 'mdi-account-switch-outline',
 			},
 			{
+				title: 'Отмена старого маршрута',
+				link: '/trips/cancel-old',
+				icon: 'mdi-map-marker-remove-outline',
+			},
+			{
 				title: 'Изменить дату',
 				link: '/trips/calendar',
 				icon: 'mdi-calendar',

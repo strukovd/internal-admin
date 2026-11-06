@@ -84,7 +84,7 @@ import BaseTextBox from '~/components/common/base/BaseTextBox.vue';
 
 definePageMeta({ layout: 'sidebar' });
 
-const { $fetchUsers } = useNuxtApp();
+const { $fetchTrips } = useNuxtApp();
 
 type ReplacementRequest = {
 	oldJiraLogin: string,
@@ -153,7 +153,7 @@ async function submitReplacement() {
 	submitSuccess.value = '';
 	isSubmitting.value = true;
 	try {
-		const response = await $fetchUsers<{ code?: number, message?: string }>('/users/replace', {
+		const response = await $fetchTrips<{ code?: number, message?: string }>('/users/replace', {
 			method: 'POST',
 			body,
 		});

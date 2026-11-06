@@ -34,7 +34,7 @@ export default defineNuxtPlugin(() => {
 	const reportHandlerFetch = createApiClient(config.public.REPORT_HANDLER_API_BASE);
 	const meterApiFetch = createApiClient(config.public.METER_APP_API_BASE);
 	const facilityApiFetch = createApiClient(config.public.FACILITY_API_BASE);
-	const usersApiFetch = createApiClient(config.public.USERS_API_BASE);
+	const tripsApiFetch = createApiClient(config.public.TRIPS_API_BASE);
 
 	// Делаем доступным как $fetchReportHandler и $fetchMeterApp
 	return {
@@ -42,7 +42,7 @@ export default defineNuxtPlugin(() => {
 			fetchReportHandler: reportHandlerFetch,
 			fetchMeterApp: meterApiFetch,
 			fetchFacility: facilityApiFetch,
-			fetchUsers: usersApiFetch
+			fetchTrips: tripsApiFetch
 		}
 	};
 })

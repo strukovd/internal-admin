@@ -39,7 +39,7 @@ export default defineNuxtConfig({
 			REPORT_HANDLER_API_BASE: process.env.NUXT_PUBLIC_REPORT_HANDLER_API_BASE ?? 'https://api.gazprom.kg/api',
 			METER_APP_API_BASE: process.env.NUXT_PUBLIC_METER_APP_API_BASE ?? 'https://api.gazprom.kg/api',
 			FACILITY_API_BASE: process.env.NUXT_PUBLIC_FACILITY_API_BASE ?? 'https://api.gazprom.kg/api',
-			USERS_API_BASE: process.env.NUXT_PUBLIC_TRIPS_API_BASE ?? 'http://10.14.188.202:7001/api/v1',
+			TRIPS_API_BASE: process.env.NUXT_PUBLIC_TRIPS_API_BASE ?? 'http://10.14.188.202:7001/api/v1',
 			apiToken: process.env.NUXT_PUBLIC_API_TOKEN,
 			authLogin: process.env.NUXT_PUBLIC_AUTH_LOGIN ?? 'admin',
 			authPasswordHash: process.env.NUXT_PUBLIC_AUTH_PASSWORD_HASH ?? '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
