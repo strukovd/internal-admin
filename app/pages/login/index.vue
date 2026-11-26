@@ -6,9 +6,6 @@
 				<BaseTextBox v-model="login" label="Логин" prependIcon="mdi-account-outline" placeholder="Введите логин" autofocus/>
 				<BaseTextBox v-model="password" label="Пароль" type="password" prependIcon="mdi-lock" placeholder="Введите пароль"/>
 				<div v-if="error" style="color:red; text-align:center; font-size:.9em">{{ error }}</div>
-				<div style="display:flex; justify-content:space-between; align-items:center; margin-top:.5em;">
-					<BaseCheckbox label="Запомнить меня" v-model="rememberMe"/>
-				</div>
 				<BaseButton @click="signIn" :disabled="isSubmitting" style="line-height:2em; text-align:center;">
 					{{ isSubmitting ? 'Проверка...' : 'Войти в систему' }}
 				</BaseButton>
@@ -19,14 +16,12 @@
 
 <script lang="ts" setup>
 import BaseButton from '~/components/common/base/BaseButton.vue';
-import BaseCheckbox from '~/components/common/base/BaseCheckbox.vue';
 import BaseTextBox from '~/components/common/base/BaseTextBox.vue';
 import { useUserStore } from '~/stores/UserStore';
 
 const login = ref('');
 const password = ref('');
 const error = ref('');
-const rememberMe = ref(false);
 const isSubmitting = ref(false);
 const userStore = useUserStore();
 
@@ -36,7 +31,6 @@ definePageMeta({
 
 async function signIn() {
 	if(isSubmitting.value) return;
-
 	error.value = '';
 
 	if(!login.value.trim() || !password.value) {
@@ -47,7 +41,7 @@ async function signIn() {
 	isSubmitting.value = true;
 	let isValid = false;
 	try {
-		isValid = await userStore.signIn(login.value, password.value, rememberMe.value);
+		isValid = await userStore.signIn(login.value, password.value);
 	}
 	catch(e) {
 		error.value = e instanceof Error ? e.message : 'Не удалось войти';
