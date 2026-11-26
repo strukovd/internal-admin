@@ -1,4 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
+import type { ModalModel } from '~/plugins/modal';
 
 type Invoice = {
 	amount: string;
@@ -26,6 +27,7 @@ type Issue = {
 export const useAppStore = defineStore('app', {
 	state: () => ({
 		issues: [] as Issue[],
+		modals: [] as ModalModel[], // стек открытых модалок, см. plugins/modal.ts
 	}),
 	actions: {}
 });
