@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { AuthHandlerError } from '~/lib/auth-handler-client';
 
 type StoredUser = {
 	login: string;
@@ -185,9 +186,34 @@ export const useUserStore = defineStore('user', {
 			});
 		},
 
+		/**
+		 * Вход. Задан NUXT_PUBLIC_AUTH_HANDLER_API_BASE - через auth-handler, иначе старая заглушка admin:admin.
+		 * false - неверный логин/пароль; другие ошибки (сервер недоступен, приложение отключено) бросаются с текстом.
+		 */
 		async signIn(login: string, password: string, rememberMe = false) {
 			const config = useRuntimeConfig();
 			const normalizedLogin = login.trim();
+			const authHandler = useNuxtApp().$authHandler;
+
+			if(authHandler) {
+				let userData;
+				try {
+					userData = await authHandler.login(normalizedLogin, password);
+				}
+				catch(e) {
+					if(e instanceof AuthHandlerError && e.status === 401) return false;
+					throw e;
+				}
+
+				// token - для остальных API (как при старом входе); JWT хранит и шлёт только $authHandler
+				this.saveSession({
+					token: `static-${createToken()}`,
+					userData: { login: userData.username, name: userData.name, role: userData.position ?? '' },
+					expiresAt: Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000),
+				});
+				return true;
+			}
+
 			const expectedLogin = String(config.public.authLogin || '');
 			const expectedHash = String(config.public.authPasswordHash || '');
 			const actualHash = await sha256(password);
@@ -217,6 +243,7 @@ export const useUserStore = defineStore('user', {
 		},
 
 		reset() {
+			useNuxtApp().$authHandler?.logout();
 			this.token = null;
 			this.userData = null;
 			this.expiresAt = null;

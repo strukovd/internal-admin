@@ -45,8 +45,17 @@ async function signIn() {
 	}
 
 	isSubmitting.value = true;
-	const isValid = await userStore.signIn(login.value, password.value, rememberMe.value);
-	isSubmitting.value = false;
+	let isValid = false;
+	try {
+		isValid = await userStore.signIn(login.value, password.value, rememberMe.value);
+	}
+	catch(e) {
+		error.value = e instanceof Error ? e.message : 'Не удалось войти';
+		return;
+	}
+	finally {
+		isSubmitting.value = false;
+	}
 
 	if(!isValid) {
 		error.value = 'Неверный логин или пароль';
