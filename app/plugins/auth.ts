@@ -47,7 +47,7 @@ export type InstanceOptions = {
  *   - 403 - не выход: прав не хватает, ошибку показывает вызывающий.
  *
  * Пример:
- *   const auth = createAuthInstance({ baseURL: 'http://auth-handler:5555/api/v1', app: 'ADMIN', onSessionEnd: () => router.push('/login') });
+ *   const auth = createAuthInstance({ baseURL: 'http://auth-handler:5555/api/v1', app: 'INTERNAL_ADMIN', onSessionEnd: () => router.push('/login') });
  *   await auth.login('ivanov', 'secret');
  *   const page = await auth.fetch<ApiPage<User>>('/users', { query: { find: 'ив' } });
  */

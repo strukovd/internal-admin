@@ -3,7 +3,7 @@ import { AuthError, type PageableResponseDTO, type ResponseDTO } from '~/plugins
 
 /*
  * Раздел «Доступ»: пользователи, группы и права из auth-handler (REST /api/v1, клиент $auth).
- * Страницы читают справочники из state (permissions, groups, grants, memberships), загружая их load*-методами.
+ * Страницы читают справочники из state (permissions, groups), загружая их load*-методами.
  */
 
 export enum PermissionLevel {
@@ -27,7 +27,10 @@ export type AccessUser = {
 	/** Путь или URL картинки (users.avatar) */
 	avatar: string | null;
 	isActive: boolean;
+	/** Последний вход по логину и паролю */
 	lastAuthAt: string | null;
+	/** Последняя активность: вход или refresh (точность ~15 мин) */
+	lastSeenAt: string | null;
 	created: string;
 };
 
@@ -54,6 +57,9 @@ export type GroupPermission = { key: string; level: PermissionLevel; modifiers: 
 
 export type GroupDetails = AccessGroup & { membersCount: number; permissions: (GroupPermission & { name: string })[] };
 
+/** Пользователь в списке: с группами, в которых состоит */
+export type AccessUserListItem = AccessUser & { groups: Pick<AccessGroup, 'id' | 'name'>[] };
+
 export type Page<T> = { content: T[]; pagination: PageableResponseDTO<T>['pagination'] };
 
 type ListQuery = { page?: number; size?: number; find?: string; isActive?: boolean };
@@ -77,12 +83,8 @@ export const useAccessStore = defineStore('access', {
 	state: () => ({
 		/** Справочник прав (loadPermissions) */
 		permissions: [] as AccessPermission[],
-		/** Все группы для фильтров и подписей (loadGroups) */
-		groups: [] as AccessGroup[],
-		/** Права групп: groupId -> права (loadGrants) */
-		grants: {} as Record<number, GroupPermission[]>,
-		/** Состав групп: [userId, groupId] (loadMemberships) */
-		memberships: [] as [number, number][],
+		/** Все группы с правами и числом участников: фильтры, подписи, «кто имеет право» (loadGroups) */
+		groups: [] as GroupDetails[],
 	}),
 
 	actions: {
@@ -93,39 +95,14 @@ export const useAccessStore = defineStore('access', {
 		},
 
 		async loadGroups() {
-			const page = await api().fetch<PageableResponseDTO<AccessGroup>>('/groups', { query: { size: MAX_PAGE_SIZE } });
-			this.groups = page.content;
-		},
-
-		/**
-		 * Права всех групп. В API нет списка «группа -> права», берём groups.get по каждой группе - пища для размышлений.
-		 * Групп немного, поэтому пока терпимо; если добавим права в groups.list - останется один запрос.
-		 */
-		async loadGrants(): Promise<GroupDetails[]> {
-			await this.loadGroups();
-			const details = await Promise.all(this.groups.map(group => this.getGroup(group.id)));
-			this.grants = Object.fromEntries(details.map(group => [group.id, group.permissions]));
-			return details;
-		},
-
-		/** Кто в каких группах. В API нет «групп пользователя», берём users.list?groupId по каждой группе - пища для размышлений */
-		async loadMemberships() {
-			await this.loadGroups();
-			const pages = await Promise.all(this.groups.map(group => this.listUsers({ groupId: group.id, size: MAX_PAGE_SIZE })));
-			this.memberships = pages.flatMap((page, index) => page.content.map(user => [user.id, this.groups[index]!.id] as [number, number]));
-		},
-
-		/** В какие группы входит пользователь (по loadMemberships) */
-		userGroups(userId: number): AccessGroup[] {
-			const groupIds = this.memberships.filter(([u]) => u === userId).map(([, g]) => g);
-			return this.groups.filter(group => groupIds.includes(group.id));
+			this.groups = (await this.listGroups({ size: MAX_PAGE_SIZE })).content;
 		},
 
 		// ---------- users ----------
 
-		async listUsers(query: ListQuery & { ids?: number[]; groupId?: number }): Promise<Page<AccessUser>> {
-			const page = await api().fetch<PageableResponseDTO<RawUser>>('/users', { query: { ...query, ids: query.ids?.join(',') } });
-			return { content: page.content.map(toUser), pagination: page.pagination };
+		async listUsers(query: ListQuery & { ids?: number[]; groupId?: number }): Promise<Page<AccessUserListItem>> {
+			const page = await api().fetch<PageableResponseDTO<RawUser & Pick<AccessUserListItem, 'groups'>>>('/users', { query: { ...query, ids: query.ids?.join(',') } });
+			return { content: page.content.map(user => ({ ...toUser(user), groups: user.groups })), pagination: page.pagination };
 		},
 
 		async createUser(dto: { username: string; name: string; position?: string | null; parentId?: number | null; avatar?: string | null; password?: string }): Promise<AccessUser & { generatedPassword?: string }> {
@@ -161,14 +138,9 @@ export const useAccessStore = defineStore('access', {
 
 		// ---------- groups ----------
 
-		/** membersCount в groups.list нет - подставляем из groups.get (loadGrants), пища для размышлений */
-		async listGroups(query: ListQuery): Promise<Page<AccessGroup & { membersCount: number }>> {
-			const [page, details] = await Promise.all([
-				api().fetch<PageableResponseDTO<AccessGroup>>('/groups', { query }),
-				this.loadGrants(),
-			]);
-			const counts = new Map(details.map(group => [group.id, group.membersCount]));
-			return { content: page.content.map(group => ({ ...group, membersCount: counts.get(group.id) ?? 0 })), pagination: page.pagination };
+		/** Группы сразу с правами и числом участников */
+		async listGroups(query: ListQuery): Promise<Page<GroupDetails>> {
+			return api().fetch<PageableResponseDTO<GroupDetails>>('/groups', { query });
 		},
 
 		async getGroup(id: number): Promise<GroupDetails> {
@@ -197,7 +169,8 @@ export const useAccessStore = defineStore('access', {
 
 		async setGroupPermissions(id: number, permissions: GroupPermission[]): Promise<GroupDetails> {
 			const group = (await api().fetch<ResponseDTO<GroupDetails>>(`/groups/${id}/permissions`, { method: 'PUT', body: { permissions } })).content;
-			this.grants[id] = group.permissions;
+			const cached = this.groups.find(g => g.id === id);
+			if(cached) cached.permissions = group.permissions;
 			return group;
 		},
 

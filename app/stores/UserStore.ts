@@ -14,6 +14,14 @@ export const useUserStore = defineStore('user', {
 	}),
 	getters: {
 		isAuthenticated: (state) => Boolean(state.token && state.userData),
+		/**
+		 * Есть ли у пользователя право key не ниже level (1 - чтение, 2 - запись, 3 - удаление), как PermissionsGuard на сервере.
+		 * Только для показа пунктов и кнопок: проверяет всё равно сервер. Права из профиля входа - обновятся с ближайшим refresh.
+		 */
+		can: (state) => (key: string, level = 1) => {
+			const permission = state.userData?.permissions[key];
+			return (Array.isArray(permission) ? permission[0] : permission ?? 0) >= level;
+		},
 	},
 	actions: {
 		/** false - неверный логин/пароль; другие ошибки (сервер недоступен, приложение отключено) бросаются с текстом */

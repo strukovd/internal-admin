@@ -20,7 +20,7 @@
 				<!-- <img src="/img/user-avatar.png" alt="Аватар пользователя" /> -->
 				<div class="user-info" style="text-align:right;">
 					<div class="name" style="color:#171717; font-size:.9rem; font-weight:700;">{{ userStore.userData?.name || 'Admin' }}</div>
-					<div class="role" style="color:#737373; font-size:.8rem;">{{ userStore.userData?.role || 'Администратор' }}</div>
+					<div class="role" style="color:#737373; font-size:.8rem;">{{ userStore.userData?.position || 'Должность не указана' }}</div>
 				</div>
 				<div>
 					<div style="background: #2563ea; color:#feffff; padding:.3em; border-radius:50%; font-weight: 700; line-height:2em; width:2em; aspect-ratio:1/1; text-align:center;">{{ userInitial }}</div>

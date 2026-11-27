@@ -2,7 +2,7 @@
 	<section class="sidebar">
 		<ul class="links">
 			<li
-				v-for="link of links"
+				v-for="link of visibleLinks"
 				:key="link.link ?? link.title ?? link.class"
 				class="link"
 			>
@@ -54,9 +54,12 @@ type SidebarLink = {
 	spacer?: boolean
 	class?: string
 	children?: SidebarLink[]
+	/** Ключ права (уровень READ), без него пункт скрыт */
+	permission?: string
 }
 
 const route = useRoute();
+const userStore = useUserStore();
 
 const links = ref<SidebarLink[]>([
 	{
@@ -203,6 +206,36 @@ const links = ref<SidebarLink[]>([
 
 	{
 		spacer: true,
+		class: 'splitter',
+	},
+	{
+		title: 'Доступ',
+		icon: 'mdi-shield-account',
+		disabled: true,
+		children: [
+			{
+				title: 'Пользователи',
+				permission: 'USERS',
+				link: '/access/users',
+				icon: 'mdi-account',
+			},
+			{
+				title: 'Группы',
+				permission: 'GROUPS',
+				link: '/access/groups',
+				icon: 'mdi-account-group',
+			},
+			{
+				title: 'Права',
+				permission: 'PERMISSIONS',
+				link: '/access/permissions',
+				icon: 'mdi-shield-key',
+			},
+		]
+	},
+
+	{
+		spacer: true,
 		class: 'spacer',
 	},
 	{
@@ -218,6 +251,18 @@ const links = ref<SidebarLink[]>([
 		disabled: true
 	}
 ]);
+
+/**
+ * Пункты, на которые есть право: раздел без доступных подпунктов скрыт,
+ * разделитель перед скрытым разделом тоже (иначе останутся две линии подряд)
+ */
+const visibleLinks = computed(() => {
+	const allowed = links.value
+		.filter(link => !link.permission || userStore.can(link.permission))
+		.map(link => link.children ? { ...link, children: link.children.filter(child => !child.permission || userStore.can(child.permission)) } : link)
+		.filter(link => !link.children || link.children.length || link.link);
+	return allowed.filter((link, index) => link.class !== 'splitter' || !allowed[index + 1]?.spacer);
+});
 
 function isActiveLink(link: SidebarLink) {
 	if( link.link && route.path === link.link ) return true;

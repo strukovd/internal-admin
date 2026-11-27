@@ -12,9 +12,23 @@
 							:class="['base-table__cell', 'base-table__cell--head', column.headerClass]"
 							:style="{ width: column.width }"
 						>
-							<slot :name="`header.${column.key}`" :column="column" :label="column.label">
-								{{ column.label }}
-							</slot>
+							<div class="bt-head">
+								<BaseIcon v-if="column.prependIcon"
+									v-bind="getHeaderIconProps(column.prependIcon, column)"
+									class="bt-head-icon prepend"
+									:class="{ interactive: column.prependIcon.onClick }"
+									@click.stop="column.prependIcon.onClick?.(column)"
+								/>
+								<slot :name="`header.${column.key}`" :column="column" :label="column.label">
+									{{ column.label }}
+								</slot>
+								<BaseIcon v-if="column.appendIcon"
+									v-bind="getHeaderIconProps(column.appendIcon, column)"
+									class="bt-head-icon append"
+									:class="{ interactive: column.appendIcon.onClick, hint: column.appendIcon.title && !column.appendIcon.onClick }"
+									@click.stop="column.appendIcon.onClick?.(column)"
+								/>
+							</div>
 						</th>
 					</tr>
 				</thead>
@@ -60,7 +74,16 @@
 </template>
 
 <script lang="ts" setup>
+import BaseIcon from './BaseIcon.vue';
 import BasePageable from './BasePageable.vue';
+
+type TableHeaderIcon = {
+	name: string; // mdi-иконка, например "mdi-help-circle-outline"
+	title?: string; // подпись при наведении
+	color?: string;
+	size?: string;
+	onClick?: (column: TableColumn) => void;
+};
 
 type TableColumn = {
 	key: string;
@@ -68,6 +91,8 @@ type TableColumn = {
 	width?: string;
 	headerClass?: string | string[] | Record<string, boolean>;
 	cellClass?: string | string[] | Record<string, boolean>;
+	prependIcon?: TableHeaderIcon; // слева от заголовка, например иконка столбца
+	appendIcon?: TableHeaderIcon; // справа от заголовка, например вопросик с подписью
 };
 
 type TableRow = Record<string, unknown>;
@@ -143,6 +168,16 @@ function getRowStyle(row: TableRow, index: number) {
 	return props.rowStyle ?? {};
 }
 
+function getHeaderIconProps(icon: TableHeaderIcon, column: TableColumn) {
+	return {
+		name: icon.name,
+		title: icon.title,
+		fill: icon.color,
+		size: icon.size ?? '16',
+		...(icon.onClick && { role: 'button', tabindex: 0, onKeydown: (event: KeyboardEvent) => event.key === 'Enter' && icon.onClick?.(column) }),
+	};
+}
+
 function changePage(page: number) {
 	internalPage.value = page;
 	emit('update:page', page); // для v-model
@@ -164,6 +199,35 @@ function changePage(page: number) {
 	.bt-thead {
 		tr {
 			border-bottom: 1px solid #e5e5e5;
+
+			.bt-head {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+
+				.bt-head-icon {
+					color: #a3a3a3;
+					height: auto;
+
+					&.hint {
+						cursor: help;
+					}
+
+					&.interactive {
+						cursor: pointer;
+						border-radius: 4px;
+
+						&:hover {
+							color: #525252;
+						}
+
+						&:focus-visible {
+							outline: 2px solid #a3a3a3;
+							outline-offset: 1px;
+						}
+					}
+				}
+			}
 		}
 	}
 
