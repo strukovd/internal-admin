@@ -1,15 +1,17 @@
 <template>
 	<button type="button"
 		class="base-button"
-		:class="[variant, { 'disabled': disabled }]"
+		:class="[variant, { 'disabled': isDisabled, 'loading': loading }]"
+		:disabled="isDisabled"
 		:style="{
-			color: !disabled && variant === 'secondary' && color ? color : '',
-			borderColor: !disabled && variant === 'secondary' && color ? color : '',
-			background: !disabled && variant !== 'secondary' && color ? color : ''
+			color: !isDisabled && variant === 'secondary' && color ? color : '',
+			// borderColor: !isDisabled && variant === 'secondary' && color ? color : '',
+			// background: !isDisabled && variant !== 'secondary' && color ? color : ''
 		}"
 	>
-		<BaseIcon v-if="prependIcon" fill="currentColor" size="1.2em" :name="prependIcon"/>
-		<div class="button-text"><slot name="default"></slot></div>
+		<BaseIcon v-if="loading" class="loading-icon" fill="currentColor" size="1.2em" name="mdi-loading"/>
+		<BaseIcon v-else-if="prependIcon" fill="currentColor" size="1.2em" :name="prependIcon"/>
+		<div v-if="$slots.default" class="button-text"><slot name="default"></slot></div>
 		<BaseIcon v-if="appendIcon" fill="currentColor" size="1.2em" :name="appendIcon"/>
 	</button>
 </template>
@@ -25,14 +27,17 @@ export default defineComponent({
 		prependIcon: String,
 		appendIcon: String,
 		disabled: { type: Boolean, default: false },
+		loading: { type: Boolean, default: false },
 		color: String,
 		variant: {
 			type: String as () => 'primary' | 'secondary' | 'outlined' | 'light',
 			default: 'primary'
 		},
 	},
-	data() {
-		return {};
+	computed: {
+		isDisabled(): boolean {
+			return this.disabled || this.loading;
+		},
 	},
 	methods: {},
 });
@@ -40,6 +45,10 @@ export default defineComponent({
 
 <style lang="scss">
 .base-button {
+	display: inline-flex;
+	align-items: center;
+	gap: .3em;
+	// font-size: .9em;
 	// background: #0079C1;
 	// color: #fff;
 
@@ -48,20 +57,17 @@ export default defineComponent({
 	// color: #0079C1;
 	border-radius: 7px;
 	box-shadow: none;
-	padding:.6em 1em .6em .8em;
+	padding:.6em .8em .6em .8em;
 	user-select: none;
 	transition:all 300ms ease 0s;
 	border-style: none;
-	display: inline-flex;
-	align-items: center;
-	gap: .3em;
 
 	&.disabled {
 		background: #ffffff55;
 		color: #c5c5c5;
 		border: 1px solid #e5e5e5;
 		cursor: inherit;
-		pointer-events: none;
+		// pointer-events: none;
 	}
 
 	&:not(.disabled) {
@@ -81,23 +87,41 @@ export default defineComponent({
 		}
 
 		&.secondary {
-			background: rgba(9,30,66,.08);
-			// background: color-mix(in srgb, currentcolor 3%, transparent 97%);
+			// background: rgba(9,30,66,.08);
+			background: color-mix(in srgb, currentcolor 7%, transparent);
+			color: #344563;
+			border: 1px solid transparent;
+			border:1px solid color-mix(in srgb, currentcolor 12%, transparent);
+		}
+		&.light {
+			color: #2563ea;
+			background: color-mix(in srgb, currentcolor 10%, transparent);
+		}
+		&.ghost {
+			background: transparent;
 			color: #344563;
 			border: 1px solid transparent;
 
-			// background: #EBF1FF;
-			// color: #0079C1;
+			&:hover {
+				opacity: 1; // перекрываем общий opacity: .8
+				background: color-mix(in srgb, currentcolor 8%, transparent);
+			}
 		}
-		&.outlined {
-			background: #ffffff;
-			color: #114bc8;
-			border: 1px solid #2563ea;
+		&.subtle {
+			color: #1d4ed8;
+			background: color-mix(in srgb, currentcolor 8%, transparent);
+			border: 1px solid color-mix(in srgb, currentcolor 20%, transparent);
 		}
-		&.light {
-			background: #e9effd;
+		&.link {
+			background: transparent;
 			color: #2563ea;
-			border: 1px solid #a8c1f7;
+			padding-inline: 0;
+			border: none;
+
+			&:hover {
+				opacity: 1;
+				text-decoration: underline;
+			}
 		}
 
 		&:hover {
@@ -110,6 +134,24 @@ export default defineComponent({
 		font-weight: 700;
 		text-align: center;
     	flex: auto 1 1;
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	.loading-icon {
+		animation: base-button-loading 1s linear infinite;
+	}
+}
+
+@keyframes base-button-loading {
+	from {
+		transform: rotate(0deg);
+	}
+
+	to {
+		transform: rotate(360deg);
 	}
 }
 </style>
